@@ -1,0 +1,190 @@
+= Create Vert.x Web Router from an OpenAPI document
+:page-permalink: /
+:page-github: vertx-howtos/web-and-openapi-howto
+
+This document will show you how to use your OpenAPI document to create a Vert.x Web Router that validates and extract incoming request parameters.
+
+== What you will build
+
+You will build a Vert.x application that manages an in-memory list of pets and serves it through the Petstore API https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml
+
+== What you need
+
+* A text editor or IDE
+* Java 8 higher
+* Maven
+
+== Create a project
+
+Here is the content of the `pom.xml` file you should be using:
+
+[source,xml]
+.Maven `pom.xml`
+----
+include::pom.xml[]
+----
+
+== Load the OpenAPI document
+
+Vert.x Web API Contract provides you `OpenAPI3RouterFactory`, an object that helps you to build the Vert.x Web Router starting from the OpenAPI specification.
+
+To load the specification into the start method of your Verticle:
+[source,java]
+----
+@Override
+public void start(Future<Void> future) {
+  OpenAPI3RouterFactory.create(this.vertx, "petstore.yaml", ar -> {
+    if (ar.succeeded()) {
+      OpenAPI3RouterFactory routerFactory = ar.result(); <1>
+    } else {
+      // Something went wrong during router factory initialization
+      future.fail(ar.cause()); // <2>
+    }
+  });
+}
+----
+<1> If the loading succeeds, you receive a ready to use instance of `OpenAPI3RouterFactory`, otherwise
+<2> you fail the deploy of the verticle
+
+== Write the handlers
+
+Now you can fit your business logic into the Route handlers using `addHandlerByOperationId()`.
+
+For `listPets`:
+[source,java]
+----
+routerFactory.addHandlerByOperationId("listPets", routingContext ->
+  routingContext
+    .response() // <1>
+    .setStatusCode(200)
+    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json") // <2>
+    .end(new JsonArray(getAllPets()).encode()) // <3>
+);
+----
+<1> Get the response object
+<2> Put `Content-type: application/json` header
+<3> Write the response with all pets
+
+For `createPets`:
+[source,java]
+----
+routerFactory.addHandlerByOperationId("createPets", routingContext -> {
+  RequestParameters params = routingContext.get("parsedParameters"); // <1>
+  JsonObject pet = params.body().getJsonObject(); // <2>
+  addPet(pet);
+  routingContext
+    .response()
+    .setStatusCode(200)
+    .end(); // <3>
+});
+----
+<1> Get the parsed parameters container
+<2> Extract the parsed body
+<3> Write the 200 empty response
+
+For `showPetById`:
+[source,java]
+----
+routerFactory.addHandlerByOperationId("showPetById", routingContext -> {
+  RequestParameters params = routingContext.get("parsedParameters"); // <1>
+  Integer id = params.pathParameter("petId").getInteger(); // <2>
+  Optional<JsonObject> pet = getAllPets().stream().filter(p -> p.getInteger("id").equals(id)).findFirst(); // <3>
+  if (pet.isPresent())
+    routingContext
+      .response()
+      .setStatusCode(200)
+      .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+      .end(pet.get().encode()); // <4>
+  else
+    routingContext.fail(404, new Exception("Pet not found")); // <5>
+});
+----
+<1> Get the parsed parameters container
+<2> Extract the parsed path parameter
+<3> Search the pet
+<4> If pet is present, write the pet in the response
+<5> If pet is absent, fail the routing context with 404
+
+== Get the router
+
+Now we can generate the `Router` and add the "Not Found" and "Bad Request" error handlers:
+[source,java]
+----
+Router router = routerFactory.getRouter(); // <1>
+router.errorHandler(404, routingContext -> { // <2>
+  JsonObject errorObject = new JsonObject()
+    .put("code", 404)
+    .put("message", (routingContext.failure() != null) ? routingContext.failure().getMessage() : "Not Found"); // <3>
+  routingContext
+    .response()
+    .setStatusCode(404)
+    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+    .end(errorObject.encode()); // <4>
+});
+router.errorHandler(400, routingContext -> {
+  JsonObject errorObject = new JsonObject()
+    .put("code", 400)
+    .put("message", (routingContext.failure() != null) ? routingContext.failure().getMessage() : "Validation Error");
+  routingContext
+    .response()
+    .setStatusCode(400)
+    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+    .end(errorObject.encode());
+});
+
+server = vertx.createHttpServer(new HttpServerOptions().setPort(8080).setHost("localhost")); // <5>
+server.requestHandler(router).listen(); // <6>
+----
+<1> Generate the `Router` from the `RouterFactory`
+<2> Mount the 404 not found error handler
+<3> Create the error json object with exception message, if any
+<4> Write the response with the error object
+<5> Instantiate a Vert.x HttpServer
+<6> Mount the router on the HttpServer instance
+
+== Complete code
+
+Here is the complete code:
+[source,java]
+----
+include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[]
+----
+
+== Running the application
+
+The `APIVerticle` already has a `main` method, so it can be used as-is to:
+
+. create a `Vertx` context, then
+. deploy `APIVerticle`.
+
+You can run the application from:
+
+. your IDE, by running the `main` method from the `APIVerticle` class, or
+. with Maven: `mvn compile exec:java`
+
+You can test your API using any command-line tool like `curl`:
+----
+$ curl http://localhost:8080/pets
+[{"id":1,"name":"Fufi","tag":"ABC"},{"id":2,"name":"Garfield","tag":"ABC"},{"id":3,"name":"Puffa","tag":"ABC"}]
+
+$ curl http://localhost:8080/pets/3
+{"id":3,"name":"Puffa","tag":"ABC"}
+
+$ curl http://localhost:8080/pets/5
+{"code":404,"message":"Pet not found"}
+
+$ curl -X POST -H "Content-type: application/json" --data '{"id":4,"name":"Alan"}' http://localhost:8080/pets
+
+$ curl http://localhost:8080/pets
+[{"id":1,"name":"Fufi","tag":"ABC"},{"id":2,"name":"Garfield","tag":"ABC"},{"id":3,"name":"Puffa","tag":"ABC"},{"id":4,"name":"Alan"}]
+----
+
+== Summary
+
+This how-to explained to you:
+
+. How to create your Vert.x Web Router starting from your OpenAPI document
+. How to extract parsed request parameters
+. How to write Json responses
+. How to define router wide error handlers
+. How to start an HTTP Server and mount the generated router
