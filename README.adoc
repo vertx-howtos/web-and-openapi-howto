@@ -85,12 +85,7 @@ include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=routerGen]
 
 == Complete code
 
-This is the complete source code of `APIVerticle`:
-
-[source,java,subs=normal]
-----
-include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=!loadSpecSampleMethod]
-----
+You can find the complete source code of https://github.com/vertx-howtos/web-and-openapi-howto/blob/master/src/main/java/io/vertx/howtos/openapi/APIVerticle.java[`APIVerticle`] on this how-to repo.
 
 == Running the application
 
