@@ -125,3 +125,12 @@ This how-to explained to you:
 . How to write Json responses
 . How to define router wide error handlers
 . How to start an HTTP Server and mount the generated router
+
+== See also
+
+* https://vertx.io/docs/vertx-web/java/[Vert.x Web Documentation]
+* https://vertx.io/docs/vertx-web-api-contract/java/[Vert.x Web API Contract]
+* https://vertx.io/docs/vertx-web-api-service/java/[Vert.x Web API Service]
+* https://github.com/OAI/OpenAPI-Specification/[OpenAPI Specification]
+* https://github.com/vert-x3/vertx-examples/blob/master/web-examples/src/main/java/io/vertx/example/web/openapi3/OpenAPI3Server.java[OpenAPI Server example]
+* https://github.com/slinkydeveloper/vertx-openapi-demo[Vert.x Web API Contract complete project example]
