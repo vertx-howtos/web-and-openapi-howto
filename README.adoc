@@ -1,0 +1,136 @@
+= Create Vert.x Web Router from an OpenAPI document
+:page-permalink: /
+:page-github: vertx-howtos/web-and-openapi-howto
+
+This document will show you how to use your OpenAPI document to create a Vert.x Web Router that validates and extract incoming request parameters.
+
+== What you will build
+
+You will build a Vert.x application that manages an in-memory list of pets and serves it through the Petstore API https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml
+
+== What you need
+
+* A text editor or IDE
+* Java 8 higher
+* Maven
+
+== Create a project
+
+Here is the content of the `pom.xml` file you should be using:
+
+[source,xml]
+.Maven `pom.xml`
+----
+include::pom.xml[]
+----
+
+== Load the OpenAPI document
+
+Vert.x Web API Contract provides you `OpenAPI3RouterFactory`, an object that helps you to build the Vert.x Web Router starting from the OpenAPI specification.
+
+To load the specification into the start method of your Verticle:
+[source,java,indent=0]
+----
+include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=loadSpec]
+----
+<1> If the loading succeeds, you receive a ready to use instance of `OpenAPI3RouterFactory`, otherwise
+<2> you fail the deploy of the verticle
+
+== Write the handlers
+
+Now you can fit your business logic into the Route handlers using `addHandlerByOperationId()`.
+
+For `listPets`:
+[source,java,indent=0]
+----
+include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=listPetsHandler]
+----
+<1> Get the response object
+<2> Put `Content-type: application/json` header
+<3> Write the response with all pets
+
+For `createPets`:
+[source,java,indent=0]
+----
+include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=createPetsHandler]
+----
+<1> Get the parsed parameters container
+<2> Extract the parsed body
+<3> Write the 200 empty response
+
+For `showPetById`:
+[source,java,indent=0]
+----
+include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=showPetByIdHandler]
+----
+<1> Get the parsed parameters container
+<2> Extract the parsed path parameter
+<3> Search the pet
+<4> If pet is present, write the pet in the response
+<5> If pet is absent, fail the routing context with 404
+
+== Get the router
+
+Now we can generate the `Router` and add the "Not Found" and "Bad Request" error handlers:
+[source,java,indent=0]
+----
+include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=routerGen]
+----
+<1> Generate the `Router` from the `RouterFactory`
+<2> Mount the 404 not found error handler
+<3> Create the error json object with exception message, if any
+<4> Write the response with the error object
+<5> Instantiate a Vert.x HttpServer
+<6> Mount the router on the HttpServer instance
+
+== Complete code
+
+You can find the complete source code of https://github.com/vertx-howtos/web-and-openapi-howto/blob/master/src/main/java/io/vertx/howtos/openapi/APIVerticle.java[`APIVerticle`] on this how-to repo.
+
+== Running the application
+
+The `APIVerticle` already has a `main` method, so it can be used as-is to:
+
+. create a `Vertx` context, then
+. deploy `APIVerticle`.
+
+You can run the application from:
+
+. your IDE, by running the `main` method from the `APIVerticle` class, or
+. with Maven: `mvn compile exec:java`
+
+You can test your API using any command-line tool like `curl`:
+----
+$ curl http://localhost:8080/pets
+[{"id":1,"name":"Fufi","tag":"ABC"},{"id":2,"name":"Garfield","tag":"ABC"},{"id":3,"name":"Puffa","tag":"ABC"}]
+
+$ curl http://localhost:8080/pets/3
+{"id":3,"name":"Puffa","tag":"ABC"}
+
+$ curl http://localhost:8080/pets/5
+{"code":404,"message":"Pet not found"}
+
+$ curl -X POST -H "Content-type: application/json" --data '{"id":4,"name":"Alan"}' http://localhost:8080/pets
+
+$ curl http://localhost:8080/pets
+[{"id":1,"name":"Fufi","tag":"ABC"},{"id":2,"name":"Garfield","tag":"ABC"},{"id":3,"name":"Puffa","tag":"ABC"},{"id":4,"name":"Alan"}]
+----
+
+== Summary
+
+This how-to explained to you:
+
+. How to create your Vert.x Web Router starting from your OpenAPI document
+. How to extract parsed request parameters
+. How to write Json responses
+. How to define router wide error handlers
+. How to start an HTTP Server and mount the generated router
+
+== See also
+
+* https://vertx.io/docs/vertx-web/java/[Vert.x Web Documentation]
+* https://vertx.io/docs/vertx-web-api-contract/java/[Vert.x Web API Contract]
+* https://vertx.io/docs/vertx-web-api-service/java/[Vert.x Web API Service]
+* https://github.com/OAI/OpenAPI-Specification/[OpenAPI Specification]
+* https://github.com/vert-x3/vertx-examples/blob/master/web-examples/src/main/java/io/vertx/example/web/openapi3/OpenAPI3Server.java[OpenAPI Server example]
+* https://github.com/slinkydeveloper/vertx-openapi-demo[Vert.x Web API Contract complete project example]
