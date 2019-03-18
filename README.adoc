@@ -18,7 +18,7 @@ You will build a Vert.x application that manages an in-memory list of pets and s
 
 Here is the content of the `pom.xml` file you should be using:
 
-[source,xml]
+[source,xml,role="collapsed"]
 .Maven `pom.xml`
 ----
 include::pom.xml[]
