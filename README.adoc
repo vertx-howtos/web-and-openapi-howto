@@ -112,6 +112,9 @@ $ curl http://localhost:8080/pets/5
 
 $ curl -X POST -H "Content-type: application/json" --data '{"id":4,"name":"Alan"}' http://localhost:8080/pets
 
+$ curl -X POST -H "Content-type: application/json" --data '{"id":4}' http://localhost:8080/pets
+{"code":400,"message":"$.name: is missing but it is required"}
+
 $ curl http://localhost:8080/pets
 [{"id":1,"name":"Fufi","tag":"ABC"},{"id":2,"name":"Garfield","tag":"ABC"},{"id":3,"name":"Puffa","tag":"ABC"},{"id":4,"name":"Alan"}]
 ----
