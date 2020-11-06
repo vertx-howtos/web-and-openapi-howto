@@ -26,19 +26,19 @@ include::pom.xml[]
 
 == Load the OpenAPI document
 
-Vert.x Web API Contract provides you `OpenAPI3RouterFactory`, an object that helps you to build the Vert.x Web Router starting from the OpenAPI specification.
+Vert.x Web API Contract provides you `RouterBuilder`, an object that helps you to build the Vert.x Web Router starting from the OpenAPI specification.
 
 To load the specification into the start method of your Verticle:
 [source,java,indent=0]
 ----
 include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=loadSpec]
 ----
-<1> If the loading succeeds, you receive a ready to use instance of `OpenAPI3RouterFactory`, otherwise
+<1> If the loading succeeds, you receive a ready to use instance of `RouterBuilder`, otherwise
 <2> you fail the deploy of the verticle
 
 == Write the handlers
 
-Now you can fit your business logic into the Route handlers using `addHandlerByOperationId()`.
+Now you can fit your business logic into the Route handlers using `operation(operationId).handler()`.
 
 For `listPets`:
 [source,java,indent=0]
@@ -76,7 +76,7 @@ Now we can generate the `Router` and add the "Not Found" and "Bad Request" error
 ----
 include::src/main/java/io/vertx/howtos/openapi/APIVerticle.java[tags=routerGen]
 ----
-<1> Generate the `Router` from the `RouterFactory`
+<1> Generate the `Router` from the `RouterBuilder`
 <2> Mount the 404 not found error handler
 <3> Create the error json object with exception message, if any
 <4> Write the response with the error object
@@ -132,7 +132,7 @@ This how-to explained to you:
 == See also
 
 * https://vertx.io/docs/vertx-web/java/[Vert.x Web Documentation]
-* https://vertx.io/docs/vertx-web-api-contract/java/[Vert.x Web API Contract]
+* https://vertx.io/docs/vertx-web-openapi/java/[Vert.x Web OpenAPI]
 * https://vertx.io/docs/vertx-web-api-service/java/[Vert.x Web API Service]
 * https://github.com/OAI/OpenAPI-Specification/[OpenAPI Specification]
 * https://github.com/vert-x3/vertx-examples/blob/master/web-examples/src/main/java/io/vertx/example/web/openapi3/OpenAPI3Server.java[OpenAPI Server example]
