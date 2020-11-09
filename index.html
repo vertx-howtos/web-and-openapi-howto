@@ -100,7 +100,7 @@
   <span style="color: #000080">&lt;version&gt;</span>1.0-SNAPSHOT<span style="color: #000080">&lt;/version&gt;</span>
 
   <span style="color: #000080">&lt;properties&gt;</span>
-    <span style="color: #000080">&lt;vertx.version&gt;</span>3.7.0<span style="color: #000080">&lt;/vertx.version&gt;</span>
+    <span style="color: #000080">&lt;vertx.version&gt;</span>4.0.0.CR1<span style="color: #000080">&lt;/vertx.version&gt;</span>
     <span style="color: #000080">&lt;maven.compiler.source&gt;</span>1.8<span style="color: #000080">&lt;/maven.compiler.source&gt;</span>
     <span style="color: #000080">&lt;maven.compiler.target&gt;</span>1.8<span style="color: #000080">&lt;/maven.compiler.target&gt;</span>
   <span style="color: #000080">&lt;/properties&gt;</span>
@@ -128,7 +128,7 @@
     <span style="color: #000080">&lt;/dependency&gt;</span>
     <span style="color: #000080">&lt;dependency&gt;</span>
       <span style="color: #000080">&lt;groupId&gt;</span>io.vertx<span style="color: #000080">&lt;/groupId&gt;</span>
-      <span style="color: #000080">&lt;artifactId&gt;</span>vertx-web-api-contract<span style="color: #000080">&lt;/artifactId&gt;</span>
+      <span style="color: #000080">&lt;artifactId&gt;</span>vertx-web-openapi<span style="color: #000080">&lt;/artifactId&gt;</span>
     <span style="color: #000080">&lt;/dependency&gt;</span>
   <span style="color: #000080">&lt;/dependencies&gt;</span>
 
@@ -154,27 +154,26 @@
 <h2 id="load-the-openapi-document">Load the OpenAPI document</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Vert.x Web API Contract provides you <code>OpenAPI3RouterFactory</code>, an object that helps you to build the Vert.x Web Router starting from the OpenAPI specification.</p>
+<p>Vert.x Web API Contract provides you <code>RouterBuilder</code>, an object that helps you to build the Vert.x Web Router starting from the OpenAPI specification.</p>
 </div>
 <div class="paragraph">
 <p>To load the specification into the start method of your Verticle:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="color: #445588;font-weight: bold">OpenAPI3RouterFactory</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">create</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #000000;font-weight: bold">this</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">vertx</span><span style="color: #000000;font-weight: bold">,</span> <span style="color: #d14">"petstore.yaml"</span><span style="color: #000000;font-weight: bold">,</span> <span style="background-color: #f8f8f8">ar</span> <span style="color: #000000;font-weight: bold">-&gt;</span> <span style="color: #000000;font-weight: bold">{</span>
-  <span style="color: #000000;font-weight: bold">if</span> <span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">ar</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">succeeded</span><span style="color: #000000;font-weight: bold">())</span> <span style="color: #000000;font-weight: bold">{</span>
-    <span style="color: #445588;font-weight: bold">OpenAPI3RouterFactory</span> <span style="background-color: #f8f8f8">routerFactory</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">ar</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">result</span><span style="color: #000000;font-weight: bold">();</span> // <b class="conum">(1)</b>
-  <span style="color: #000000;font-weight: bold">}</span> <span style="color: #000000;font-weight: bold">else</span> <span style="color: #000000;font-weight: bold">{</span>
-    <span style="color: #999988;font-style: italic">// Something went wrong during router factory initialization</span>
-    <span style="background-color: #f8f8f8">future</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">fail</span><span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">ar</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">cause</span><span style="color: #000000;font-weight: bold">());</span> // <b class="conum">(2)</b>
-  <span style="color: #000000;font-weight: bold">}</span>
+<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="color: #445588;font-weight: bold">RouterBuilder</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">create</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #000000;font-weight: bold">this</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">vertx</span><span style="color: #000000;font-weight: bold">,</span> <span style="color: #d14">"petstore.yaml"</span><span style="color: #000000;font-weight: bold">)</span>
+  <span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">onSuccess</span><span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">routerBuilder</span> <span style="color: #000000;font-weight: bold">-&gt;</span> <span style="color: #000000;font-weight: bold">{</span> // <b class="conum">(1)</b>
+    <span style="color: #999988;font-style: italic">// You can start building the router using routerBuilder</span>
+  <span style="color: #000000;font-weight: bold">}).</span><span style="color: #008080">onFailure</span><span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">cause</span> <span style="color: #000000;font-weight: bold">-&gt;</span> <span style="color: #000000;font-weight: bold">{</span> // <b class="conum">(2)</b>
+  <span style="color: #999988;font-style: italic">// Something went wrong during router factory initialization</span>
+  <span style="background-color: #f8f8f8">startPromise</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">fail</span><span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">cause</span><span style="color: #000000;font-weight: bold">);</span>
 <span style="color: #000000;font-weight: bold">});</span></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <ol>
 <li>
-<p>If the loading succeeds, you receive a ready to use instance of <code>OpenAPI3RouterFactory</code>, otherwise</p>
+<p>If the loading succeeds, you receive a ready to use instance of <code>RouterBuilder</code>, otherwise</p>
 </li>
 <li>
 <p>you fail the deploy of the verticle</p>
@@ -187,14 +186,14 @@
 <h2 id="write-the-handlers">Write the handlers</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Now you can fit your business logic into the Route handlers using <code>addHandlerByOperationId()</code>.</p>
+<p>Now you can fit your business logic into the Route handlers using <code>operation(operationId).handler()</code>.</p>
 </div>
 <div class="paragraph">
 <p>For <code>listPets</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="background-color: #f8f8f8">routerFactory</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">addHandlerByOperationId</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"listPets"</span><span style="color: #000000;font-weight: bold">,</span> <span style="background-color: #f8f8f8">routingContext</span> <span style="color: #000000;font-weight: bold">-&gt;</span>
+<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="background-color: #f8f8f8">routerBuilder</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">operation</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"listPets"</span><span style="color: #000000;font-weight: bold">).</span><span style="color: #008080">handler</span><span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">routingContext</span> <span style="color: #000000;font-weight: bold">-&gt;</span>
   <span style="background-color: #f8f8f8">routingContext</span>
     <span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">response</span><span style="color: #000000;font-weight: bold">()</span> // <b class="conum">(1)</b>
     <span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">setStatusCode</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #009999">200</span><span style="color: #000000;font-weight: bold">)</span>
@@ -221,8 +220,8 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="background-color: #f8f8f8">routerFactory</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">addHandlerByOperationId</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"createPets"</span><span style="color: #000000;font-weight: bold">,</span> <span style="background-color: #f8f8f8">routingContext</span> <span style="color: #000000;font-weight: bold">-&gt;</span> <span style="color: #000000;font-weight: bold">{</span>
-  <span style="color: #445588;font-weight: bold">RequestParameters</span> <span style="background-color: #f8f8f8">params</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">routingContext</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">get</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"parsedParameters"</span><span style="color: #000000;font-weight: bold">);</span> // <b class="conum">(1)</b>
+<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="background-color: #f8f8f8">routerBuilder</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">operation</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"createPets"</span><span style="color: #000000;font-weight: bold">).</span><span style="color: #008080">handler</span><span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">routingContext</span> <span style="color: #000000;font-weight: bold">-&gt;</span> <span style="color: #000000;font-weight: bold">{</span>
+  <span style="color: #445588;font-weight: bold">RequestParameters</span> <span style="background-color: #f8f8f8">params</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">routingContext</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">get</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #445588;font-weight: bold">ValidationHandler</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">REQUEST_CONTEXT_KEY</span><span style="color: #000000;font-weight: bold">);</span> // <b class="conum">(1)</b>
   <span style="color: #445588;font-weight: bold">JsonObject</span> <span style="background-color: #f8f8f8">pet</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">params</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">body</span><span style="color: #000000;font-weight: bold">().</span><span style="color: #008080">getJsonObject</span><span style="color: #000000;font-weight: bold">();</span> // <b class="conum">(2)</b>
   <span style="background-color: #f8f8f8">addPet</span><span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">pet</span><span style="color: #000000;font-weight: bold">);</span>
   <span style="background-color: #f8f8f8">routingContext</span>
@@ -250,7 +249,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="background-color: #f8f8f8">routerFactory</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">addHandlerByOperationId</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"showPetById"</span><span style="color: #000000;font-weight: bold">,</span> <span style="background-color: #f8f8f8">routingContext</span> <span style="color: #000000;font-weight: bold">-&gt;</span> <span style="color: #000000;font-weight: bold">{</span>
+<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="background-color: #f8f8f8">routerBuilder</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">operation</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"showPetById"</span><span style="color: #000000;font-weight: bold">).</span><span style="color: #008080">handler</span><span style="color: #000000;font-weight: bold">(</span><span style="background-color: #f8f8f8">routingContext</span> <span style="color: #000000;font-weight: bold">-&gt;</span> <span style="color: #000000;font-weight: bold">{</span>
   <span style="color: #445588;font-weight: bold">RequestParameters</span> <span style="background-color: #f8f8f8">params</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">routingContext</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">get</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"parsedParameters"</span><span style="color: #000000;font-weight: bold">);</span> // <b class="conum">(1)</b>
   <span style="color: #445588;font-weight: bold">Integer</span> <span style="background-color: #f8f8f8">id</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">params</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">pathParameter</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"petId"</span><span style="color: #000000;font-weight: bold">).</span><span style="color: #008080">getInteger</span><span style="color: #000000;font-weight: bold">();</span> // <b class="conum">(2)</b>
   <span style="color: #445588;font-weight: bold">Optional</span><span style="color: #000000;font-weight: bold">&lt;</span><span style="color: #445588;font-weight: bold">JsonObject</span><span style="color: #000000;font-weight: bold">&gt;</span> <span style="background-color: #f8f8f8">pet</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">getAllPets</span><span style="color: #000000;font-weight: bold">()</span>
@@ -297,7 +296,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="color: #445588;font-weight: bold">Router</span> <span style="background-color: #f8f8f8">router</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">routerFactory</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">getRouter</span><span style="color: #000000;font-weight: bold">();</span> // <b class="conum">(1)</b>
+<pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="java"><span style="color: #445588;font-weight: bold">Router</span> <span style="background-color: #f8f8f8">router</span> <span style="color: #000000;font-weight: bold">=</span> <span style="background-color: #f8f8f8">routerBuilder</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">createRouter</span><span style="color: #000000;font-weight: bold">();</span> // <b class="conum">(1)</b>
 <span style="background-color: #f8f8f8">router</span><span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">errorHandler</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #009999">404</span><span style="color: #000000;font-weight: bold">,</span> <span style="background-color: #f8f8f8">routingContext</span> <span style="color: #000000;font-weight: bold">-&gt;</span> <span style="color: #000000;font-weight: bold">{</span> // <b class="conum">(2)</b>
   <span style="color: #445588;font-weight: bold">JsonObject</span> <span style="background-color: #f8f8f8">errorObject</span> <span style="color: #000000;font-weight: bold">=</span> <span style="color: #000000;font-weight: bold">new</span> <span style="color: #445588;font-weight: bold">JsonObject</span><span style="color: #000000;font-weight: bold">()</span> // <b class="conum">(3)</b>
     <span style="color: #000000;font-weight: bold">.</span><span style="color: #008080">put</span><span style="color: #000000;font-weight: bold">(</span><span style="color: #d14">"code"</span><span style="color: #000000;font-weight: bold">,</span> <span style="color: #009999">404</span><span style="color: #000000;font-weight: bold">)</span>
@@ -334,7 +333,7 @@
 <div class="colist arabic">
 <ol>
 <li>
-<p>Generate the <code>Router</code> from the <code>RouterFactory</code></p>
+<p>Generate the <code>Router</code> from the <code>RouterBuilder</code></p>
 </li>
 <li>
 <p>Mount the 404 not found error handler</p>
@@ -453,7 +452,7 @@ $ curl http://localhost:8080/pets
 <p><a href="https://vertx.io/docs/vertx-web/java/">Vert.x Web Documentation</a></p>
 </li>
 <li>
-<p><a href="https://vertx.io/docs/vertx-web-api-contract/java/">Vert.x Web API Contract</a></p>
+<p><a href="https://vertx.io/docs/vertx-web-openapi/java/">Vert.x Web OpenAPI</a></p>
 </li>
 <li>
 <p><a href="https://vertx.io/docs/vertx-web-api-service/java/">Vert.x Web API Service</a></p>
@@ -574,7 +573,7 @@ $ curl http://localhost:8080/pets
   <div class="row">
     <div class="col">
       <hr>
-      <p><small>Last published: 2020-04-26 16:20:18 +0000.</small></p>
+      <p><small>Last published: 2020-11-09 17:45:58 +0000.</small></p>
     </div>
   </div>
 </div>
