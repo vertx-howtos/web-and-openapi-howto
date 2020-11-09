@@ -1,17 +1,17 @@
 package io.vertx.howtos.openapi;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.RequestParameters;
-import io.vertx.ext.web.api.contract.RouterFactoryOptions;
-import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.ext.web.Router;
-import io.vertx.core.Future;
+import io.vertx.ext.web.openapi.RouterBuilder;
+import io.vertx.ext.web.validation.RequestParameters;
+import io.vertx.ext.web.validation.ValidationHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,7 @@ import java.util.Optional;
 
 public class APIVerticle extends AbstractVerticle {
 
-  HttpServer server;
+  private HttpServer server;
 
   final List<JsonObject> pets = new ArrayList<>(Arrays.asList(
     new JsonObject().put("id", 1).put("name", "Fufi").put("tag", "ABC"),
@@ -29,14 +29,12 @@ public class APIVerticle extends AbstractVerticle {
   ));
 
   @Override
-  public void start(Future<Void> future) {
-    OpenAPI3RouterFactory.create(this.vertx, "petstore.yaml", ar -> {
-      if (ar.succeeded()) {
-        OpenAPI3RouterFactory routerFactory = ar.result();
-
+  public void start(Promise<Void> startPromise) {
+    RouterBuilder.create(this.vertx, "petstore.yaml")
+      .onSuccess(routerBuilder -> {
         // Add routes handlers
         // tag::listPetsHandler[]
-        routerFactory.addHandlerByOperationId("listPets", routingContext ->
+        routerBuilder.operation("listPets").handler(routingContext ->
           routingContext
             .response() // <1>
             .setStatusCode(200)
@@ -45,8 +43,8 @@ public class APIVerticle extends AbstractVerticle {
         );
         // end::listPetsHandler[]
         // tag::createPetsHandler[]
-        routerFactory.addHandlerByOperationId("createPets", routingContext -> {
-          RequestParameters params = routingContext.get("parsedParameters"); // <1>
+        routerBuilder.operation("createPets").handler(routingContext -> {
+          RequestParameters params = routingContext.get(ValidationHandler.REQUEST_CONTEXT_KEY); // <1>
           JsonObject pet = params.body().getJsonObject(); // <2>
           addPet(pet);
           routingContext
@@ -56,7 +54,7 @@ public class APIVerticle extends AbstractVerticle {
         });
         // end::createPetsHandler[]
         // tag::showPetByIdHandler[]
-        routerFactory.addHandlerByOperationId("showPetById", routingContext -> {
+        routerBuilder.operation("showPetById").handler(routingContext -> {
           RequestParameters params = routingContext.get("parsedParameters"); // <1>
           Integer id = params.pathParameter("petId").getInteger(); // <2>
           Optional<JsonObject> pet = getAllPets()
@@ -76,7 +74,7 @@ public class APIVerticle extends AbstractVerticle {
 
         // Generate the router
         // tag::routerGen[]
-        Router router = routerFactory.getRouter(); // <1>
+        Router router = routerBuilder.createRouter(); // <1>
         router.errorHandler(404, routingContext -> { // <2>
           JsonObject errorObject = new JsonObject() // <3>
             .put("code", 404)
@@ -109,11 +107,9 @@ public class APIVerticle extends AbstractVerticle {
         server = vertx.createHttpServer(new HttpServerOptions().setPort(8080).setHost("localhost")); // <5>
         server.requestHandler(router).listen(); // <6>
         // end::routerGen[]
-        future.complete(); // Complete the verticle start
-      } else {
-        future.fail(ar.cause()); // Fail the verticle start
-      }
-    });
+        startPromise.complete(); // Complete the verticle start
+      })
+      .onFailure(startPromise::fail);
   }
 
   @Override
@@ -136,15 +132,14 @@ public class APIVerticle extends AbstractVerticle {
 
   // tag::loadSpecSampleMethod[]
   // For documentation purpose
-  private void loadSpecSample(Future<Void> future) {
+  private void loadSpecSample(Promise<Void> startPromise) {
     // tag::loadSpec[]
-    OpenAPI3RouterFactory.create(this.vertx, "petstore.yaml", ar -> {
-      if (ar.succeeded()) {
-        OpenAPI3RouterFactory routerFactory = ar.result(); // <1>
-      } else {
-        // Something went wrong during router factory initialization
-        future.fail(ar.cause()); // <2>
-      }
+    RouterBuilder.create(this.vertx, "petstore.yaml")
+      .onSuccess(routerBuilder -> { // <1>
+        // You can start building the router using routerBuilder
+      }).onFailure(cause -> { // <2>
+      // Something went wrong during router factory initialization
+      startPromise.fail(cause);
     });
     // end::loadSpec[]
   }
